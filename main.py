@@ -127,5 +127,18 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
+# When bot is ready
+@bot.event
+async def on_ready():
+    # Slash command syncing
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} command(s)")
+    except Exception as e:
+        print(e)
+
+    print(f"Bot is online. Logged in as {bot.user.name}.")
+    logsmaker.info("Bot is back online.")
+
 # Run the bot
 bot.run(token)

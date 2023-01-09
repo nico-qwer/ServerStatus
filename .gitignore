@@ -1,2 +1,5 @@
 serverIP.txt
 token.txt
+dev_token.txt
+run.bat
+__pycache__
