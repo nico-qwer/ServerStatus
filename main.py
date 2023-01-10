@@ -12,7 +12,7 @@ import logsmaker
 
 
 # Read values from txt files
-with open('dev_token.txt', 'r') as token_file:
+with open('token.txt', 'r') as token_file:
     token = token_file.readline()
 with open('serverIP.txt', 'r') as IP_file:
     server_ip = IP_file.readline()
