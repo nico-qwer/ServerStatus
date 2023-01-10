@@ -1,5 +1,4 @@
 # Imports
-
 # discord.py for discord API
 import discord
 from discord import app_commands
@@ -13,12 +12,12 @@ import logsmaker
 
 
 # Read values from txt files
-with open('token.txt', 'r') as token_file:
+with open('dev_token.txt', 'r') as token_file:
     token = token_file.readline()
 with open('serverIP.txt', 'r') as IP_file:
     server_ip = IP_file.readline()
-with open('botOwnerId.txt', 'r') as IP_file:
-    ownerId = IP_file.readline()
+with open('botOwnerId.txt', 'r') as owner_file:
+    ownerId = owner_file.readline()
 
 
 # Setup bot
@@ -31,7 +30,7 @@ bot.remove_command("help")
 server = JavaServer.lookup(server_ip)
 
 
-# Warn nico_qwer that mc server is offline
+# Warn bot owner that mc server is offline
 async def offline_notif(inter):
     user = await bot.fetch_user(ownerId)
 
@@ -70,7 +69,7 @@ async def status(inter: discord.Interaction):
 
     embed.set_footer(text=f"Server IP: {server_ip}")
 
-    await inter.edit_original_response(embed=embed)
+    await inter.edit_original_response(content="", embed=embed)
     logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: status.")
 
 @bot.tree.command(name="ping")
@@ -82,7 +81,7 @@ async def ping(inter: discord.Interaction):
         await offline_notif(inter)
         return
 
-    await inter.edit_original_response(f"The server replied in {round(latency, 2)} ms")
+    await inter.edit_original_response(content=f"The server replied in {round(latency, 2)} ms")
     logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: ping.")
 
 @bot.tree.command(name="players")
@@ -95,7 +94,7 @@ async def players(inter: discord.Interaction):
         return
 
     if query.players.names == []:
-        await inter.edit_original_response("There are no players online.")
+        await inter.edit_original_response(content="There are no players online.")
         logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: players.")
         return
 
@@ -110,25 +109,21 @@ async def players(inter: discord.Interaction):
     )
 
     embed.set_footer(text=f"Server IP: {server_ip}")
-    await inter.edit_original_response(embed=embed)
+    
+    await inter.edit_original_response(content="", embed=embed)
 
     logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: players.")
 
 
 # Slash command syncing
 @bot.command()
-async def sync(ctx: commands.Context, method = "global"):
-
-    if (ctx.author.id != ownerId):
-        ctx.send("Only the owner of the bot can sync slash commands.")
+async def sync(ctx: commands.Context):
+    if (str(ctx.author.id) != ownerId):
+        await ctx.send("Only the owner of the bot can sync slash commands.")
         return
 
     try:
-        if method == "dev":
-            synced = await bot.tree.sync(guild=discord.Object(id="956518656366497832"))
-            
-        elif method == "global":
-            synced = await bot.tree.sync()
+        synced = await bot.tree.sync()
 
         await ctx.send(f"Synced {len(synced)} command(s)")
         logsmaker.info(f"Synced {len(synced)} command(s)")
@@ -143,19 +138,6 @@ async def on_ready():
     print(f"Bot is online. Logged in as {bot.user.name}.")
     logsmaker.info("Bot is back online.", "\n")
 
-
-# When bot is ready
-@bot.event
-async def on_ready():
-    # Slash command syncing
-    try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
-    except Exception as e:
-        print(e)
-
-    print(f"Bot is online. Logged in as {bot.user.name}.")
-    logsmaker.info("Bot is back online.")
 
 # Run the bot
 bot.run(token)
