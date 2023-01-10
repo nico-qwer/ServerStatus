@@ -1,6 +1,7 @@
 # N_QMCS discord bot
 A discord bot to monitor a Minecraft server
-V 1.0.0
+Now supports slash commands!
+V 1.1.0
 
 ## Dependancies:
 * discord.py  
@@ -8,4 +9,5 @@ V 1.0.0
 
 ## Files needed:
 * token.txt for your bot token
-* serverIP.txt for the server you want to monitor
+* serverIP.txt for the IP of the MC server you want to monitor
+* botOwnerId.txt for your user ID on Discord
