@@ -1,14 +1,25 @@
 # Imports
+
+# discord.py for discord API
 import discord
-import logsmaker
+from discord import app_commands
 from discord.ext import commands
+
+# mcstatus for server monitoring
 from mcstatus import JavaServer
 
+# custom library for log file
+import logsmaker
+
+
 # Read values from txt files
-with open('token.txt', 'r') as token_file:
+with open('dev_token.txt', 'r') as token_file:
     token = token_file.readline()
 with open('serverIP.txt', 'r') as IP_file:
     server_ip = IP_file.readline()
+with open('botOwnerId.txt', 'r') as IP_file:
+    ownerId = IP_file.readline()
+
 
 # Setup bot
 intents = discord.Intents.all()
@@ -19,27 +30,29 @@ bot.remove_command("help")
 # Setup mcstatus
 server = JavaServer.lookup(server_ip)
 
+
 # Warn nico_qwer that mc server is offline
-async def offline_notif(ctx):
-    await ctx.send("The server did not answer, it's probably offline. I will be contacting nico_qwer so he can fix this.")
+async def offline_notif(inter):
+    user = await bot.fetch_user(ownerId)
 
-    user = await bot.fetch_user("800394501158862859")
+    await inter.edit_original_response(f"The server did not answer, it's probably offline. I will be contacting {user.name} so he can fix this.")
     await user.send("Minecraft server is offline!!")
-
     logsmaker.error("Server offline.")
 
-# commands
-@bot.command()
-async def echo(ctx: commands.Context):
-    await ctx.send("Hello!")
-    logsmaker.info(f"Command used. Author: {ctx.author}. Channel: {ctx.channel}. Command: echo.")
 
-@bot.command()
-async def status(ctx: commands.Context):
+# commands
+@bot.tree.command(name="echo")
+async def echo(inter: discord.Interaction):
+    await inter.response.send_message("Hello!")
+    logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: echo.")
+
+@bot.tree.command(name="status")
+async def status(inter: discord.Interaction):
+    await inter.response.send_message("Waiting for server...")
     try:
         status = server.status()
     except TimeoutError:
-        await offline_notif(ctx)
+        await offline_notif(inter)
         return
 
     s = ""
@@ -57,31 +70,33 @@ async def status(ctx: commands.Context):
 
     embed.set_footer(text=f"Server IP: {server_ip}")
 
-    await ctx.send(embed=embed)
-    logsmaker.info(f"Command used. Author: {ctx.author}. Channel: {ctx.channel}. Command: status.")
+    await inter.edit_original_response(embed=embed)
+    logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: status.")
 
-@bot.command()
-async def ping(ctx: commands.Context):
+@bot.tree.command(name="ping")
+async def ping(inter: discord.Interaction):
+    await inter.response.send_message("Waiting for server...")
     try:
         latency = server.ping()
     except TimeoutError:
-        await offline_notif(ctx)
+        await offline_notif(inter)
         return
 
-    await ctx.send(f"The server replied in {round(latency, 2)} ms")
-    logsmaker.info(f"Command used. Author: {ctx.author}. Channel: {ctx.channel}. Command: ping.")
+    await inter.edit_original_response(f"The server replied in {round(latency, 2)} ms")
+    logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: ping.")
 
-@bot.command()
-async def players(ctx: commands.Context):
+@bot.tree.command(name="players")
+async def players(inter: discord.Interaction):
+    await inter.response.send_message("Waiting for server...")
     try:
         query = server.query()
     except TimeoutError:
-        await offline_notif(ctx)
+        await offline_notif(inter)
         return
 
     if query.players.names == []:
-        await ctx.send("There are no players online.")
-        logsmaker.info(f"Command used. Author: {ctx.author}. Channel: {ctx.channel}. Command: players.")
+        await inter.edit_original_response("There are no players online.")
+        logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: players.")
         return
 
     player_list = ""
@@ -95,37 +110,39 @@ async def players(ctx: commands.Context):
     )
 
     embed.set_footer(text=f"Server IP: {server_ip}")
-    await ctx.send(embed=embed)
-    logsmaker.info(f"Command used. Author: {ctx.author}. Channel: {ctx.channel}. Command: players.")
+    await inter.edit_original_response(embed=embed)
 
-# New help command
-@bot.group(invoke_without_command=True)
-async def help(ctx):
-    embed = discord.Embed(
-        title="Help menu", 
-        color=0x7aa660
-    )
+    logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: players.")
 
-    embed.add_field(name=f"{command_prefix}help", value="Displays this menu.", inline=False)
-    embed.add_field(name=f"{command_prefix}echo", value="Test command. Answers \"Hello!\".", inline=False)
-    embed.add_field(name=f"{command_prefix}status", value="Gives basic info about the server.", inline=False)
-    embed.add_field(name=f"{command_prefix}ping", value="Gives the server's ping.", inline=False)
-    embed.add_field(name=f"{command_prefix}players", value="Lists of all players online.", inline=False)
 
-    embed.set_footer(text=f"Server IP: {server_ip}")
-    await ctx.send(embed=embed)
-    logsmaker.info(f"Command used. Author: {ctx.author}. Channel: {ctx.channel}. Command: help.")
+# Slash command syncing
+@bot.command()
+async def sync(ctx: commands.Context, method = "global"):
 
-# Detects need for help
+    if (ctx.author.id != ownerId):
+        ctx.send("Only the owner of the bot can sync slash commands.")
+        return
+
+    try:
+        if method == "dev":
+            synced = await bot.tree.sync(guild=discord.Object(id="956518656366497832"))
+            
+        elif method == "global":
+            synced = await bot.tree.sync()
+
+        await ctx.send(f"Synced {len(synced)} command(s)")
+        logsmaker.info(f"Synced {len(synced)} command(s)")
+    except Exception as e:
+        await ctx.send(e)
+        logsmaker.error(f"Slash command syncing error: {e}")
+
+
+# When bot is ready
 @bot.event
-async def on_message(message):
-    if message.author != bot.user:
-        if " help " in message.content or "aide " in message.content: 
-            if " bot " in message.content: 
-                ctx = await bot.get_context(message)
-                await help(ctx)
+async def on_ready():
+    print(f"Bot is online. Logged in as {bot.user.name}.")
+    logsmaker.info("Bot is back online.", "\n")
 
-    await bot.process_commands(message)
 
 # Run the bot
 bot.run(token)

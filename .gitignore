@@ -1,2 +1,9 @@
-serverIP.txt
+__pycache__
+
+botlogs.log
+run.bat
+
 token.txt
+dev_token.txt
+serverIP.txt
+botOwnerId.txt

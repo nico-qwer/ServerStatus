@@ -5,18 +5,18 @@ def write_to_logfile(line):
     file.write(line + "\n")
     file.close()
 
-def info(message):
+def info(message, before = ""):
     timenow = time.ctime()
-    write_to_logfile(f"{timenow} | {message}")
+    write_to_logfile(f"{before}{timenow} | {message}")
 
-def warn(message):
+def warn(message, before = ""):
     timenow = time.ctime()
-    write_to_logfile(f"{timenow} | ! | {message}")
+    write_to_logfile(f"{before}{timenow} | ! | {message}")
 
-def error(message):
+def error(message, before = ""):
     timenow = time.ctime()
-    write_to_logfile(f"{timenow} | ERROR | {message}")
+    write_to_logfile(f"{before}{timenow} | ERROR | {message}")
 
-def crit_error(message):
+def crit_error(message, before = ""):
     timenow = time.ctime()
-    write_to_logfile(f"<<< {timenow} | !!! CRITICAL ERROR !!! | {message} >>>")
+    write_to_logfile(f"{before}<<< {timenow} | !!! CRITICAL ERROR !!! | {message} >>>")
