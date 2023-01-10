@@ -40,12 +40,12 @@ async def offline_notif(inter):
 
 
 # commands
-@bot.tree.command(name="echo")
+@bot.tree.command(name="echo", description="Test command. Bot will respond \"Hello!\".")
 async def echo(inter: discord.Interaction):
     await inter.response.send_message("Hello!")
     logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: echo.")
 
-@bot.tree.command(name="status")
+@bot.tree.command(name="status", description="Small, but useful info about the MC server.")
 async def status(inter: discord.Interaction):
     await inter.response.send_message("Waiting for server...")
     try:
@@ -72,7 +72,7 @@ async def status(inter: discord.Interaction):
     await inter.edit_original_response(content="", embed=embed)
     logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: status.")
 
-@bot.tree.command(name="ping")
+@bot.tree.command(name="ping", description="Current ping of the MC server.")
 async def ping(inter: discord.Interaction):
     await inter.response.send_message("Waiting for server...")
     try:
@@ -84,7 +84,7 @@ async def ping(inter: discord.Interaction):
     await inter.edit_original_response(content=f"The server replied in {round(latency, 2)} ms")
     logsmaker.info(f"Command used. Author: {inter.user.name}. Channel: {inter.channel}. Command: ping.")
 
-@bot.tree.command(name="players")
+@bot.tree.command(name="players", description="A list of all currently online players.")
 async def players(inter: discord.Interaction):
     await inter.response.send_message("Waiting for server...")
     try:
